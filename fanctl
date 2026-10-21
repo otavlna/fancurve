@@ -1,0 +1,67 @@
+#!/bin/bash
+# Control for the fancurve LaunchDaemon.
+#
+#   fanctl install     copy fancurve + daemon into the system (run once, from the folder with the files)
+#   fanctl on          start the curve now and after every reboot
+#   fanctl off         stop it, hand fans back to macOS (stays off after reboot)
+#   fanctl status      is it running + current fan speeds
+#   fanctl test        run the curve in the foreground, Ctrl+C to stop
+#   fanctl uninstall   remove everything
+
+LABEL=io.github.otavlna.fancurve
+PLIST=/Library/LaunchDaemons/$LABEL.plist
+SCRIPT=/usr/local/libexec/fancurve.sh
+SMC=/Applications/Stats.app/Contents/Resources/smc
+
+cmd=${1:-status}
+
+# Commands that change the system need root.
+case "$cmd" in
+  install|on|off|test|uninstall) [ "$(id -u)" -ne 0 ] && exec sudo "$0" "$@" ;;
+esac
+
+loaded() { launchctl print "system/$LABEL" >/dev/null 2>&1; }
+
+case "$cmd" in
+  install)
+    src=$(cd "$(dirname "$0")" && pwd)
+    plutil -lint -s "$src/$LABEL.plist" || exit 1
+    mkdir -p /usr/local/libexec /usr/local/bin
+    install -m 755 -o root -g wheel "$src/fancurve.sh" "$SCRIPT"
+    install -m 644 -o root -g wheel "$src/$LABEL.plist" "$PLIST"
+    install -m 755 -o root -g wheel "$src/fanctl" /usr/local/bin/fanctl
+    # Installed but off until "fanctl on".
+    launchctl disable "system/$LABEL"
+    echo "installed, now run: fanctl on"
+    ;;
+  on)
+    [ -f "$PLIST" ] || { echo "not installed, run: fanctl install"; exit 1; }
+    launchctl enable "system/$LABEL"
+    loaded || launchctl bootstrap system "$PLIST"
+    echo "fan curve ON"
+    ;;
+  off)
+    launchctl disable "system/$LABEL"
+    loaded && launchctl bootout "system/$LABEL"
+    "$SMC" reset >/dev/null
+    echo "fan curve OFF, fans back on macOS automatic"
+    ;;
+  status)
+    if pgrep -qf "fancurve.sh --apply"; then echo "fan curve: ON"; else echo "fan curve: OFF"; fi
+    "$SMC" fans | grep -E "^[0-9]:|Actual|Mode"
+    ;;
+  test)
+    "$SCRIPT" --apply
+    ;;
+  uninstall)
+    loaded && launchctl bootout "system/$LABEL"
+    launchctl enable "system/$LABEL"
+    "$SMC" reset >/dev/null
+    rm -f "$PLIST" "$SCRIPT" /usr/local/bin/fanctl
+    echo "uninstalled"
+    ;;
+  *)
+    sed -n '4,9s/^# //p' "$0"
+    exit 1
+    ;;
+esac
