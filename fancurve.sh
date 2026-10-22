@@ -21,10 +21,10 @@ INTERVAL=1
 mode=${1:---dry-run}
 duration=${2:-30}
 
-# Hottest CPU die sensor (TPDx/TRDx = per-core die sensors, TPMP/TPSP = cluster).
+# Hottest CPU core sensor (Tpxx = performance cores, Texx = efficiency cores).
 cpu_temp() {
   "$SMC" list -t 2>/dev/null |
-    awk '/^\[(TPD|TRD|TPMP|TPSP)/ { v=$2+0; if (v>m) m=v } END { printf "%.1f", m }'
+    awk '/^\[T[pe][0-9A-Za-z][0-9A-Za-z]\]/ { v=$2+0; if (v>m) m=v } END { printf "%.1f", m }'
 }
 
 # Target RPM for a temperature, or "auto".

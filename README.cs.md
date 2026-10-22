@@ -51,7 +51,7 @@ Pod 90 °C řídí větráky macOS jako obvykle. Na 90 °C je převezme skript, 
 | pokles pod 85 °C | zpátky na automatiku | `T_OFF` |
 
 - **Hysteréze:** když skript větráky jednou převezme, vrátí je macOS až pod 85 °C, ne hned pod 90 °C. Mezi 85 a 90 °C zůstanou na 4500 rpm. Větráky tak nepřepínají sem a tam, když se teplota pohybuje kolem prahu.
-- **Senzor:** bere se nejvyšší hodnota ze senzorů CPU jader (SMC klíče `TPD*`, `TRD*`, `TPMP`, `TPSP`).
+- **Senzor:** bere se nejvyšší hodnota ze senzorů CPU jader (SMC klíče `Tp*` pro výkonná jádra, `Te*` pro efektivní jádra).
 - **Interval:** teplota se měří a otáčky nastavují každou sekundu (`INTERVAL`).
 - **Při ukončení:** skript vždy zavolá `smc reset`, takže větráky nikdy nezůstanou zaseknuté v manuálu.
 

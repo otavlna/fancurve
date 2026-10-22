@@ -51,7 +51,7 @@ Below 90 °C macOS controls the fans as usual. At 90 °C the script takes over, 
 | drops below 85 °C | back to automatic | `T_OFF` |
 
 - **Hysteresis:** once the script takes over, it hands the fans back to macOS only below 85 °C, not as soon as the temperature drops under 90 °C. Between 85 and 90 °C the fans stay at 4500 rpm. This keeps the fans from flipping back and forth when the temperature hovers around the threshold.
-- **Sensor:** the highest reading across the CPU core sensors (SMC keys `TPD*`, `TRD*`, `TPMP`, `TPSP`).
+- **Sensor:** the highest reading across the CPU core sensors (SMC keys `Tp*` for performance cores, `Te*` for efficiency cores).
 - **Interval:** temperature is read and fan speed set every second (`INTERVAL`).
 - **On exit:** the script always calls `smc reset`, so the fans never stay stuck in manual mode.
 
